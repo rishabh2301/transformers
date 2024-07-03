@@ -137,6 +137,7 @@ class FalconConfig(PretrainedConfig):
         eos_token_id=11,
         ffn_hidden_size=None,
         activation="gelu",
+        enable_rms_norm=False,
         **kwargs,
     ):
         self.vocab_size = vocab_size
@@ -152,7 +153,9 @@ class FalconConfig(PretrainedConfig):
         self.attention_dropout = attention_dropout
         self.bos_token_id = bos_token_id
         self.eos_token_id = eos_token_id
-        self.num_kv_heads = num_attention_heads if num_kv_heads is None else num_kv_heads
+        self.num_kv_heads = (
+            num_attention_heads if num_kv_heads is None else num_kv_heads
+        )
         self.alibi = alibi
         self.new_decoder_architecture = new_decoder_architecture
         self.multi_query = multi_query  # Ignored when new_decoder_architecture is True
@@ -163,6 +166,7 @@ class FalconConfig(PretrainedConfig):
         self.rope_theta = rope_theta
         self.rope_scaling = rope_scaling
         self.activation = activation
+        self.enable_rms_norm = enable_rms_norm
         if ffn_hidden_size is None:
             self.ffn_hidden_size = hidden_size * 4
         else:
@@ -191,7 +195,8 @@ class FalconConfig(PretrainedConfig):
 
         if not isinstance(self.rope_scaling, dict) or len(self.rope_scaling) != 2:
             raise ValueError(
-                "`rope_scaling` must be a dictionary with two fields, `type` and `factor`, " f"got {self.rope_scaling}"
+                "`rope_scaling` must be a dictionary with two fields, `type` and `factor`, "
+                f"got {self.rope_scaling}"
             )
         rope_scaling_type = self.rope_scaling.get("type", None)
         rope_scaling_factor = self.rope_scaling.get("factor", None)
@@ -199,5 +204,11 @@ class FalconConfig(PretrainedConfig):
             raise ValueError(
                 f"`rope_scaling`'s type field must be one of ['linear', 'dynamic'], got {rope_scaling_type}"
             )
-        if rope_scaling_factor is None or not isinstance(rope_scaling_factor, float) or rope_scaling_factor <= 1.0:
-            raise ValueError(f"`rope_scaling`'s factor field must be a float > 1, got {rope_scaling_factor}")
+        if (
+            rope_scaling_factor is None
+            or not isinstance(rope_scaling_factor, float)
+            or rope_scaling_factor <= 1.0
+        ):
+            raise ValueError(
+                f"`rope_scaling`'s factor field must be a float > 1, got {rope_scaling_factor}"
+            )
